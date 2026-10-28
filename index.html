@@ -1,0 +1,1133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="color-scheme" content="dark" />
+<meta name="description" content="Raceway Park Archive — a searchable demo of digitised Englishtown drag-racing negatives." />
+<title>Raceway Park Archive</title>
+<!-- Inlined so a static host never has to answer for a favicon it does not have. -->
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNSIgZmlsbD0iIzBiMGQxMCIvPjxwYXRoIGQ9Ik0zIDIxaDI2djMuNEgzeiIgZmlsbD0iI2Q4MzkyZiIvPjxwYXRoIGQ9Ik0zIDI1LjRoMjZ2My40SDN6IiBmaWxsPSIjZjBiNDI5Ii8+PHRleHQgeD0iMTYiIHk9IjE3IiBmb250LWZhbWlseT0iQXJpYWwgQmxhY2ssQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZm9udC13ZWlnaHQ9IjkwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2YyZWNlMSI+UlA8L3RleHQ+PC9zdmc+" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap" />
+<style>
+/* Raceway Park — one stylesheet, two front ends.
+ *
+ * The server-rendered demo (scripts/demo/server.ts) and the static export
+ * (scripts/demo/export-static.ts) share this file so the archive looks like
+ * one thing. Every class the server's templates emit is still styled here;
+ * classes prefixed for the static app carry an `x-` note where they are only
+ * reachable from the exported bundle.
+ *
+ * Fonts are declared web-font-first with condensed system fallbacks. Only the
+ * static export links Google Fonts: the live server runs under
+ * `script-src 'none'; default-src 'self'`, and the point of that CSP is not to
+ * start making exceptions to it. On the live server the fallbacks apply and
+ * nothing is requested cross-origin, so neither surface logs a blocked load.
+ *
+ * Identity: asphalt and night, cream paper for the type, and the two colours a
+ * driver actually watches -- staging amber and the green of a clean light.
+ * Accents stay on type and rules; the photographs are the only thing allowed
+ * to be loud.
+ */
+
+:root {
+  /* Asphalt, cool and slightly blue so warm print tones sit forward of it. */
+  --bg:        #0b0d10;
+  --bg-2:      #11141a;
+  --card:      #151920;
+  --card-2:    #1b2029;
+  --rail:      #262d38;
+  --rail-soft: #1d232c;
+
+  /* Cream rather than white: a scanned print is never #fff. */
+  --ink:       #f2ece1;
+  --ink-mute:  #a7a69f;
+  --dim:       #71756f;
+
+  --accent:    #d8392f;  /* start light */
+  --accent-dk: #b02b23;
+  --amber:     #f0b429;  /* staging */
+  --green:     #5bbd82;  /* clean light */
+  --warn:      #e8a94a;
+
+  --radius:    3px;
+  --radius-lg: 6px;
+  --max:       1280px;
+
+  --display: "Big Shoulders Display", "Haettenschweiler", "Arial Narrow", "Oswald", Impact, sans-serif;
+  --body:    "Barlow", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --cond:    "Barlow Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --mono:    ui-monospace, "SF Mono", SFMono-Regular, "JetBrains Mono", Menlo, monospace;
+
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px -12px rgba(0,0,0,.65);
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+html, body { margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.6 var(--body);
+  min-height: 100vh;
+  /* A whisper of film grain over flat asphalt. Pure CSS, no asset. */
+  background-image:
+    radial-gradient(1200px 620px at 72% -12%, rgba(240,180,41,.055), transparent 70%),
+    radial-gradient(900px 520px at 8% 2%, rgba(216,57,47,.045), transparent 68%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--ink); text-decoration: none; }
+a:hover { color: var(--amber); }
+
+/* One visible focus treatment for the whole surface. Keyboard users get the
+   same affordance everywhere, including the gallery and the lightbox. */
+:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+code, .pid, .cap { font-family: var(--mono); }
+code { font-size: .82em; color: var(--ink-mute); letter-spacing: .02em; }
+
+em {
+  color: var(--dim); font-style: normal;
+  font-family: var(--cond); font-size: 12px;
+  letter-spacing: .14em; text-transform: uppercase;
+}
+
+h1, h2, h3 { font-family: var(--display); font-weight: 800; letter-spacing: .005em; line-height: 1.02; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* Skip link: first tab stop, invisible until it is the thing you are on. */
+.skip {
+  position: absolute; left: 12px; top: -48px; z-index: 60;
+  background: var(--amber); color: #15120a;
+  padding: 10px 16px; border-radius: var(--radius);
+  font: 700 13px/1 var(--cond); letter-spacing: .14em; text-transform: uppercase;
+  transition: top .14s ease;
+}
+.skip:focus { top: 12px; color: #15120a; }
+
+/* --- header ----------------------------------------------------------- */
+header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 28px;
+  align-items: center;
+  padding: 16px 28px;
+  border-bottom: 1px solid var(--rail);
+  background: rgba(8,10,13,.92);
+  backdrop-filter: saturate(1.3) blur(10px);
+  position: sticky; top: 0; z-index: 30;
+}
+/* The one piece of livery: a starter's stripe under the masthead. */
+header::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px;
+  background: linear-gradient(90deg,
+    var(--accent) 0 18%, var(--amber) 18% 34%, var(--rail) 34% 100%);
+  opacity: .85;
+}
+
+.brand { display: inline-flex; align-items: baseline; gap: 11px; white-space: nowrap; }
+.brand b {
+  font: 800 27px/1 var(--display);
+  letter-spacing: .055em; text-transform: uppercase; color: var(--ink);
+}
+.brand span {
+  font: 600 11px/1 var(--cond);
+  letter-spacing: .3em; text-transform: uppercase; color: var(--dim);
+}
+.brand:hover b { color: var(--amber); }
+
+form.search, .x-searchform { display: flex; max-width: 660px; width: 100%; }
+form.search input, .x-searchform input {
+  flex: 1; min-width: 0;
+  background: var(--bg-2); color: var(--ink);
+  border: 1px solid var(--rail); border-right: 0;
+  border-radius: var(--radius) 0 0 var(--radius);
+  padding: 11px 15px; font: 16px/1.2 var(--body);
+}
+form.search input::placeholder, .x-searchform input::placeholder { color: var(--dim); }
+form.search input:focus, .x-searchform input:focus {
+  outline: none; border-color: var(--amber); box-shadow: inset 0 0 0 1px var(--amber);
+}
+form.search button, .x-searchform button {
+  background: var(--accent); color: #fff;
+  border: 1px solid var(--accent); border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 11px 22px; cursor: pointer;
+  font: 700 13px/1.2 var(--cond); letter-spacing: .16em; text-transform: uppercase;
+}
+form.search button:hover, .x-searchform button:hover { background: var(--accent-dk); }
+
+nav { display: flex; gap: 22px; }
+nav a {
+  color: var(--ink-mute);
+  font: 600 12px/1 var(--cond); letter-spacing: .16em; text-transform: uppercase;
+  padding: 6px 0; border-bottom: 1px solid transparent;
+}
+nav a:hover, nav a[aria-current="page"] { color: var(--amber); border-bottom-color: var(--amber); }
+
+.banner {
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--rail-soft);
+  color: var(--ink-mute);
+  font: 500 12.5px/1.5 var(--cond);
+  letter-spacing: .1em; text-transform: uppercase;
+  padding: 9px 28px;
+}
+.banner b { color: var(--amber); font-weight: 700; }
+
+main { max-width: var(--max); margin: 0 auto; padding: 48px 28px 80px; }
+
+/* --- hero / landing --------------------------------------------------- */
+.hero { max-width: 900px; }
+.hero h1 {
+  font-size: clamp(44px, 8.5vw, 92px);
+  text-transform: uppercase;
+  margin: 8px 0 20px;
+  color: var(--ink);
+}
+.hero h1 .hl { color: var(--accent); }
+.hero .lede { font-size: clamp(17px, 2.2vw, 21px); line-height: 1.55; color: var(--ink); max-width: 44em; }
+.hero .sub { color: var(--ink-mute); margin-top: 26px; font-size: 15px; max-width: 48em; }
+.hero .sub b { color: var(--ink); }
+.hero .note { margin-top: 28px; color: var(--ink-mute); font-size: 14px; }
+.hero .chips { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 30px; align-items: center; }
+.hero .chips .lbl {
+  font: 600 11px/1 var(--cond); letter-spacing: .2em; text-transform: uppercase;
+  color: var(--dim); margin-right: 6px;
+}
+
+.chip {
+  background: var(--card); border: 1px solid var(--rail); color: var(--ink);
+  padding: 7px 15px; border-radius: 999px;
+  font: 500 14px/1.2 var(--body);
+  transition: border-color .12s ease, color .12s ease, transform .12s ease;
+}
+.chip:hover { border-color: var(--amber); color: var(--amber); transform: translateY(-1px); }
+.chip.disabled { color: var(--dim); border-style: dashed; }
+.chip[aria-pressed="true"] { background: var(--amber); border-color: var(--amber); color: #15120a; font-weight: 600; }
+
+/* --- empty / no results ---------------------------------------------- */
+.emptyq { max-width: 680px; padding: 8px 0 40px; }
+.emptyq h2 { font-size: 34px; text-transform: uppercase; margin: 0 0 12px; }
+.emptyq p { color: var(--ink-mute); }
+.btn, .btn-ghost {
+  display: inline-block; padding: 12px 20px; border-radius: var(--radius);
+  font: 700 13px/1 var(--cond); letter-spacing: .16em; text-transform: uppercase;
+  margin-top: 14px; cursor: pointer;
+}
+.btn { background: var(--accent); color: #fff; border: 1px solid var(--accent); }
+.btn:hover { background: var(--accent-dk); color: #fff; }
+.btn-ghost { color: var(--ink-mute); border: 1px solid var(--rail); background: none; }
+.btn-ghost:hover { color: var(--ink); border-color: var(--ink-mute); }
+
+/* --- section headings ------------------------------------------------- */
+.results h2, .browse h2, .contact h2 {
+  font-size: clamp(28px, 4vw, 40px); text-transform: uppercase; margin: 0 0 8px;
+}
+.results .meta, .browse .meta, .contact .meta {
+  color: var(--ink-mute); font-size: 14.5px; margin: 0 0 28px; max-width: 62em;
+}
+.warnbar {
+  background: rgba(232,169,74,.1); border: 1px solid rgba(232,169,74,.3);
+  color: var(--warn); padding: 10px 14px; border-radius: var(--radius);
+  margin-bottom: 18px; font-size: 13.5px;
+}
+
+/* --- results list ---------------------------------------------------- */
+.hits { display: flex; flex-direction: column; gap: 14px; }
+.hit {
+  display: grid; grid-template-columns: 196px minmax(0, 1fr); gap: 20px;
+  background: var(--card); border: 1px solid var(--rail); border-radius: var(--radius-lg);
+  padding: 14px; align-items: start;
+  transition: border-color .12s ease, background .12s ease;
+}
+.hit:hover { border-color: var(--amber); background: var(--card-2); color: var(--ink); }
+.hit .thumb {
+  width: 196px; aspect-ratio: 3 / 2; object-fit: contain;
+  background: #000; border-radius: var(--radius); display: block;
+}
+.hit .thumb.empty {
+  display: grid; place-items: center; color: var(--dim);
+  font: 600 11px/1.3 var(--cond); letter-spacing: .14em; text-transform: uppercase;
+  text-align: center; padding: 8px; border: 1px dashed var(--rail);
+}
+.hit .hit-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; }
+.hit .pid { color: var(--dim); font-size: 12px; letter-spacing: .04em; }
+
+ul.evidence { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+ul.evidence li { color: var(--ink); font-size: 15px; }
+ul.evidence b {
+  color: var(--ink-mute); font: 600 11px/1 var(--cond);
+  letter-spacing: .15em; text-transform: uppercase; margin-right: 8px;
+}
+ul.evidence .meta { color: var(--dim); font-size: 12.5px; margin-left: 8px; }
+
+/* Provenance pills. The distinction between what a model guessed and what a
+   person confirmed is the one thing in this UI that must never be subtle. */
+.pill {
+  display: inline-block; padding: 3px 9px; border-radius: 999px;
+  font: 600 10.5px/1.5 var(--cond); letter-spacing: .13em; text-transform: uppercase;
+  background: var(--card-2); color: var(--ink-mute); margin-left: 5px;
+  border: 1px solid transparent; white-space: nowrap;
+}
+.pill.known, .pill.verified {
+  background: rgba(91,189,130,.13); color: var(--green); border-color: rgba(91,189,130,.34);
+}
+.pill.inferred {
+  background: rgba(240,180,41,.1); color: var(--amber); border-color: rgba(240,180,41,.3);
+}
+.pill.community_claim, .pill.community\ claim { background: rgba(201,154,247,.12); color: #c99af7; }
+.pill.match-strong { background: rgba(91,189,130,.13); color: var(--green); border-color: rgba(91,189,130,.34); }
+.pill.match-partial { background: rgba(240,180,41,.1); color: var(--amber); border-color: rgba(240,180,41,.3); }
+.pill.match-weak { background: rgba(216,57,47,.12); color: #e2a0a0; }
+
+/* --- gallery / browse grid ------------------------------------------- */
+.grid { columns: 4 260px; column-gap: 18px; }
+.grid > .cell { break-inside: avoid; margin: 0 0 18px; width: 100%; }
+.cell {
+  background: var(--card); border: 1px solid var(--rail); border-radius: var(--radius-lg);
+  overflow: hidden; display: block; position: relative;
+  transition: border-color .14s ease, transform .14s ease, box-shadow .14s ease;
+}
+.cell:hover { border-color: var(--amber); transform: translateY(-2px); box-shadow: var(--shadow); color: var(--ink); }
+/* Natural height: the width/height attributes give the intrinsic ratio, so the
+   box is reserved before the bytes land and nothing reflows. */
+.cell img { width: 100%; height: auto; display: block; background: #000; }
+.cell .cap {
+  display: flex; justify-content: space-between; gap: 10px;
+  padding: 10px 12px; font-size: 12px; color: var(--ink-mute); letter-spacing: .04em;
+}
+
+/* --- contact sheet --------------------------------------------------- */
+.cs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 22px; }
+.cs-cell {
+  margin: 0; background: var(--card); border: 1px solid var(--rail);
+  border-radius: var(--radius-lg); overflow: hidden; position: relative;
+}
+.cs-cell:hover { border-color: var(--amber); }
+.cs-num {
+  position: absolute; top: 10px; left: 10px; z-index: 2;
+  background: rgba(0,0,0,.78); color: var(--amber);
+  padding: 4px 9px; border-radius: var(--radius);
+  font: 700 13px/1 var(--mono); letter-spacing: .12em;
+}
+.cs-cell img { width: 100%; aspect-ratio: 3 / 2; object-fit: contain; display: block; background: #000; }
+.cs-cell figcaption {
+  padding: 11px 13px; font-size: 12px; color: var(--ink-mute);
+  display: flex; flex-direction: column; gap: 3px;
+}
+.cs-cell .dim { color: var(--dim); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* --- detail ---------------------------------------------------------- */
+.detail {
+  display: grid; grid-template-columns: minmax(0, 1.9fr) minmax(300px, .9fr);
+  gap: 36px; align-items: start;
+}
+.viewer {
+  background: #000; border: 1px solid var(--rail); border-radius: var(--radius-lg);
+  padding: 10px; position: relative; box-shadow: var(--shadow);
+}
+.viewer img { max-width: 100%; display: block; margin: 0 auto; border-radius: 2px; }
+.viewer .zoomhint {
+  position: absolute; right: 18px; bottom: 18px;
+  background: rgba(0,0,0,.72); color: var(--ink);
+  border: 1px solid var(--rail);
+  padding: 6px 11px; border-radius: 999px;
+  font: 600 10.5px/1 var(--cond); letter-spacing: .15em; text-transform: uppercase;
+  pointer-events: none;
+}
+
+.meta-panel h2 { font-size: 26px; text-transform: uppercase; margin: 0 0 4px; }
+.meta-panel h2 code { font-family: var(--mono); font-size: 15px; color: var(--amber); letter-spacing: .06em; }
+.meta-panel h3 {
+  font: 600 11.5px/1 var(--cond); letter-spacing: .2em; text-transform: uppercase;
+  color: var(--dim); margin: 30px 0 12px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--rail);
+}
+.meta-panel .muted { color: var(--ink-mute); }
+.meta-panel .small { font-size: 12.5px; line-height: 1.6; }
+
+table.obs { width: 100%; border-collapse: collapse; font-size: 14px; }
+table.obs th, table.obs td { padding: 9px 10px; text-align: left; border-bottom: 1px solid var(--rail-soft); vertical-align: top; }
+table.obs th {
+  color: var(--dim); font: 600 10.5px/1 var(--cond);
+  letter-spacing: .15em; text-transform: uppercase;
+}
+table.obs td:first-child {
+  color: var(--ink-mute); font: 600 11.5px/1.4 var(--cond);
+  letter-spacing: .1em; text-transform: uppercase; white-space: nowrap;
+}
+table.obs tr:last-child td { border-bottom: 0; }
+table.obs .meta { color: var(--dim); font-size: 12px; }
+
+/* --- CSS-only zoom, for the server-rendered detail page.
+   The live server runs `script-src 'none'`. A `:target` overlay buys a real
+   full-bleed zoom without asking that CSP for an exception. ------------- */
+.lightbox {
+  position: fixed; inset: 0; z-index: 50;
+  background: rgba(5,6,8,.96);
+  display: none; place-items: center; padding: 28px;
+}
+.lightbox:target { display: grid; }
+.lightbox img {
+  max-width: 100%; max-height: calc(100vh - 110px);
+  object-fit: contain; border-radius: 2px;
+}
+.lightbox .close {
+  position: absolute; top: 20px; right: 24px;
+  color: var(--ink); border: 1px solid var(--rail); background: var(--card);
+  padding: 9px 16px; border-radius: 999px;
+  font: 700 12px/1 var(--cond); letter-spacing: .16em; text-transform: uppercase;
+}
+.lightbox .close:hover { border-color: var(--amber); color: var(--amber); }
+.lightbox .lb-cap {
+  position: absolute; left: 0; right: 0; bottom: 22px; text-align: center;
+  color: var(--dim); font: 600 11px/1 var(--cond); letter-spacing: .18em; text-transform: uppercase;
+}
+
+/* --- footer ---------------------------------------------------------- */
+footer {
+  max-width: var(--max); margin: 56px auto 28px; padding: 22px 28px 0;
+  border-top: 1px solid var(--rail);
+  display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  color: var(--dim); font: 500 12px/1.6 var(--cond); letter-spacing: .1em; text-transform: uppercase;
+}
+
+/* ===================================================================== */
+/* x-  : classes only the static export (export-static.ts) emits.        */
+/* ===================================================================== */
+
+/* Filter rail */
+.x-controls {
+  display: flex; flex-wrap: wrap; gap: 18px 30px; align-items: flex-end;
+  padding: 24px 0; margin: 44px 0 30px;
+  border-top: 1px solid var(--rail); border-bottom: 1px solid var(--rail);
+}
+.x-controls::before {
+  content: "Filter"; flex-basis: 100%;
+  font: 600 10.5px/1 var(--cond); letter-spacing: .22em; text-transform: uppercase;
+  color: var(--dim); margin-bottom: -4px;
+}
+.x-facet { display: flex; flex-direction: column; gap: 8px; }
+.x-facet > .lbl {
+  font: 600 10.5px/1 var(--cond); letter-spacing: .2em; text-transform: uppercase; color: var(--dim);
+}
+.x-facet .opts { display: flex; flex-wrap: wrap; gap: 7px; }
+.x-pill {
+  background: var(--card); border: 1px solid var(--rail); color: var(--ink-mute);
+  padding: 6px 13px; border-radius: 999px; cursor: pointer;
+  font: 500 13px/1.2 var(--body);
+}
+.x-pill:hover { border-color: var(--amber); color: var(--amber); }
+.x-pill[aria-pressed="true"] { background: var(--amber); border-color: var(--amber); color: #15120a; font-weight: 600; }
+.x-count { color: var(--dim); font-size: 11px; margin-left: 5px; font-family: var(--mono); }
+
+.x-statusline {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 22px;
+}
+.x-statusline .n { font: 800 20px/1 var(--display); text-transform: uppercase; }
+.x-statusline .n b { color: var(--amber); }
+
+/* Skeletons: the gallery reserves its boxes before a decode lands, so the
+   grid never reflows under the cursor. */
+.x-skel { background: var(--card); border: 1px solid var(--rail-soft); border-radius: var(--radius-lg); overflow: hidden; }
+.x-skel .box {
+  width: 100%; aspect-ratio: 3 / 2;
+  background: linear-gradient(100deg, var(--card) 28%, var(--card-2) 50%, var(--card) 72%);
+  background-size: 220% 100%;
+  animation: x-sweep 1.25s ease-in-out infinite;
+}
+.x-skel .line { height: 11px; margin: 12px; border-radius: 3px; background: var(--card-2); }
+@keyframes x-sweep { from { background-position: 180% 0; } to { background-position: -40% 0; } }
+
+.cell img.x-loading { opacity: 0; }
+.cell img { transition: opacity .3s ease; }
+
+/* JS lightbox for the static app: pan/zoom on a real pointer or a pinch. */
+.x-lb {
+  position: fixed; inset: 0; z-index: 50; background: rgba(5,6,8,.97);
+  display: none; align-items: center; justify-content: center;
+}
+.x-lb.open { display: flex; }
+.x-lb .stage { position: absolute; inset: 56px 20px 70px; overflow: hidden; touch-action: none; }
+.x-lb .stage img {
+  position: absolute; top: 50%; left: 50%;
+  max-width: none; transform-origin: 0 0;
+  cursor: grab; user-select: none; -webkit-user-drag: none;
+}
+.x-lb .stage img.grabbing { cursor: grabbing; }
+.x-lb .bar {
+  position: absolute; top: 0; left: 0; right: 0; height: 56px;
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  padding: 0 20px; border-bottom: 1px solid var(--rail);
+}
+.x-lb .bar .who { font: 700 13px/1 var(--mono); letter-spacing: .1em; color: var(--amber); }
+.x-lb .tools { display: flex; gap: 8px; align-items: center; }
+.x-lb button {
+  background: var(--card); color: var(--ink); border: 1px solid var(--rail);
+  border-radius: 999px; padding: 8px 14px; cursor: pointer;
+  font: 700 11.5px/1 var(--cond); letter-spacing: .14em; text-transform: uppercase;
+}
+.x-lb button:hover { border-color: var(--amber); color: var(--amber); }
+.x-lb .foot {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 70px;
+  display: flex; align-items: center; justify-content: center; gap: 18px;
+  color: var(--dim); font: 600 10.5px/1 var(--cond); letter-spacing: .17em; text-transform: uppercase;
+  text-align: center; padding: 0 16px;
+}
+.x-lb kbd {
+  font: 600 10.5px/1 var(--mono); color: var(--ink-mute);
+  background: var(--card); border: 1px solid var(--rail);
+  border-radius: 3px; padding: 3px 6px; letter-spacing: 0;
+}
+
+/* Detail view, static app: full-bleed plate with the panel beside it. */
+.x-detail-nav { display: flex; gap: 10px; align-items: center; margin-bottom: 22px; flex-wrap: wrap; }
+
+.x-note {
+  background: var(--card); border: 1px solid var(--rail); border-left: 3px solid var(--amber);
+  border-radius: var(--radius); padding: 14px 16px; margin: 26px 0 0;
+  color: var(--ink-mute); font-size: 13px; line-height: 1.62;
+}
+.x-note b { color: var(--ink); }
+
+/* --- responsive ------------------------------------------------------ */
+@media (max-width: 900px) {
+  header { grid-template-columns: auto auto; grid-template-areas: "brand nav" "search search"; gap: 14px 18px; padding: 14px 18px; }
+  .brand { grid-area: brand; }
+  nav { grid-area: nav; justify-content: flex-end; }
+  form.search, .x-searchform { grid-area: search; max-width: none; }
+  .banner { padding: 9px 18px; font-size: 11.5px; letter-spacing: .07em; }
+  main { padding: 32px 18px 64px; }
+  .detail { grid-template-columns: 1fr; gap: 26px; }
+  .hit { grid-template-columns: 140px minmax(0, 1fr); gap: 14px; }
+  .hit .thumb { width: 140px; }
+  footer { margin-top: 40px; padding: 20px 18px 0; }
+}
+
+@media (max-width: 620px) {
+  body { font-size: 15.5px; }
+  /* Get to the photographs sooner: on a phone the hero was most of a screenful
+     before the first frame appeared. */
+  main { padding-top: 24px; }
+  .hero h1 { font-size: clamp(38px, 13vw, 56px); margin: 0 0 12px; }
+  .hero .lede { font-size: 16.5px; line-height: 1.45; }
+  .hero .sub { margin-top: 16px; font-size: 14px; }
+  .hero .chips { margin-top: 18px; }
+  .x-controls { margin: 28px 0 22px; padding: 18px 0; }
+  .brand b { font-size: 22px; }
+  .brand span { display: none; }
+  nav { gap: 16px; }
+  .hero h1 { margin-bottom: 16px; }
+  .grid { columns: 2 150px; column-gap: 12px; }
+  .grid > .cell { margin-bottom: 12px; }
+  .cs-grid { grid-template-columns: 1fr; }
+  .hit { grid-template-columns: 1fr; }
+  .hit .thumb { width: 100%; }
+  .x-controls { gap: 16px; }
+  .x-lb .stage { inset: 52px 8px 78px; }
+  .x-lb .foot { height: 78px; line-height: 1.5; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}
+
+/* Printing a results page is how an operator takes the archive to a reunion. */
+@media print {
+  :root { --bg: #fff; --ink: #000; --ink-mute: #333; --card: #fff; --rail: #bbb; --dim: #555; }
+  body { background: #fff; color: #000; }
+  header, footer, .banner, form.search, nav, .x-controls, .x-lb, .lightbox { display: none !important; }
+  main { padding: 0; max-width: none; }
+  .cell, .hit, .cs-cell { break-inside: avoid; border-color: #bbb; }
+}
+
+/* Shell-only: the pre-script loading state. */
+.x-booting .x-afterboot { display: none; }
+.x-bootgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
+html:not(.x-booting) .x-bootgrid { display: none; }
+</style>
+</head>
+<body class="x-booting">
+<a class="skip" href="#main">Skip to content</a>
+
+<header>
+  <a class="brand" href="#/"><b>Raceway&nbsp;Park</b><span>archive</span></a>
+  <form class="x-searchform" id="searchform" role="search" autocomplete="off">
+    <label class="sr-only" for="q">Search the archive</label>
+    <input type="search" id="q" name="q" placeholder="try &quot;white camaro&quot;, &quot;car 4023&quot; or &quot;raceway&quot;" />
+    <button type="submit">search</button>
+  </form>
+  <nav>
+    <a href="#/">gallery</a>
+  </nav>
+</header>
+
+<div class="banner">DEMO &middot; <b>10</b> Englishtown frames published &middot; 5 held back pending crop review &middot; details are machine suggestions unless marked operator-confirmed</div>
+
+<main id="main">
+  <div class="x-bootgrid" aria-hidden="true"><div class="x-skel"><div class="box"></div><div class="line"></div></div><div class="x-skel"><div class="box"></div><div class="line"></div></div><div class="x-skel"><div class="box"></div><div class="line"></div></div><div class="x-skel"><div class="box"></div><div class="line"></div></div><div class="x-skel"><div class="box"></div><div class="line"></div></div><div class="x-skel"><div class="box"></div><div class="line"></div></div><div class="x-skel"><div class="box"></div><div class="line"></div></div><div class="x-skel"><div class="box"></div><div class="line"></div></div></div>
+  <noscript>
+    <section class="emptyq">
+      <h2>This demo needs JavaScript</h2>
+      <p>The search, filters and zoom all run in the page, because the bundle is
+         static files with no server behind them. The server-rendered version of
+         this archive works without scripts, but it is reachable on the private
+         network only.</p>
+    </section>
+  </noscript>
+</main>
+
+<div class="x-lb" id="lb" role="dialog" aria-modal="true" aria-label="Enlarged frame" aria-hidden="true">
+  <div class="bar">
+    <span class="who" id="lbwho"></span>
+    <span class="tools">
+      <button type="button" id="lbout" aria-label="Zoom out">&minus;</button>
+      <span class="meta" id="lbpct" style="min-width:4.5em;text-align:center">100%</span>
+      <button type="button" id="lbin" aria-label="Zoom in">+</button>
+      <button type="button" id="lbfit" aria-label="Fit to screen">fit</button>
+      <button type="button" id="lbclose" aria-label="Close enlarged view">close</button>
+    </span>
+  </div>
+  <div class="stage" id="lbstage"><img id="lbimg" alt="" /></div>
+  <div class="foot">
+    <span>drag to pan</span>
+    <span><kbd>+</kbd> <kbd>&minus;</kbd> zoom</span>
+    <span><kbd>0</kbd> fit</span>
+    <span><kbd>esc</kbd> close</span>
+    <span>watermarked preview &middot; not the archival master</span>
+  </div>
+</div>
+
+<footer>
+  <span>Raceway Park archive &middot; static demo of 10 approved frames &middot; built 2026-10-28</span>
+  <span>previews are watermarked, resolution-capped, metadata-stripped</span>
+</footer>
+
+<script id="payload" type="application/json">{"generatedAt":"2026-10-28","listable":10,"pendingReview":5,"omitted":0,"chips":["red","street","white","Chevrolet","black","blue","Camaro","Camaro Z28"],"frames":[{"id":"YEASMGG4KF5RJGYP","n":1,"attrs":[{"field":"car number","value":"9067?","certainty":"probable","roll":false},{"field":"category","value":"street","certainty":"probable","roll":false},{"field":"color","value":"red","certainty":"probable","roll":false}],"textLines":3,"preview":{"src":"img/YEASMGG4KF5RJGYP-p.jpg","w":1067,"h":1600},"thumb":{"src":"img/YEASMGG4KF5RJGYP-t.jpg","w":267,"h":400}},{"id":"JHEGCZF5QF1NM31Q","n":2,"attrs":[{"field":"car number","value":"81035?","certainty":"probable","roll":false},{"field":"category","value":"street","certainty":"probable","roll":false},{"field":"color","value":"red","certainty":"probable","roll":false}],"textLines":2,"preview":{"src":"img/JHEGCZF5QF1NM31Q-p.jpg","w":1067,"h":1600},"thumb":{"src":"img/JHEGCZF5QF1NM31Q-t.jpg","w":267,"h":400}},{"id":"QJQQ02TTZVT6E740","n":3,"attrs":[{"field":"category","value":"street","certainty":"probable","roll":false},{"field":"color","value":"white","certainty":"probable","roll":false},{"field":"make","value":"Chevrolet","certainty":"probable","roll":false},{"field":"model","value":"Camaro","certainty":"probable","roll":false},{"field":"year","value":"2000-2005","certainty":"probable","roll":false}],"textLines":2,"preview":{"src":"img/QJQQ02TTZVT6E740-p.jpg","w":1600,"h":1067},"thumb":{"src":"img/QJQQ02TTZVT6E740-t.jpg","w":400,"h":267}},{"id":"A6TCAGQE5YRWXA3J","n":4,"attrs":[{"field":"activity","value":"drag racing","certainty":"probable","roll":false},{"field":"car number","value":"6589?","certainty":"probable","roll":false},{"field":"category","value":"street","certainty":"probable","roll":false},{"field":"color","value":"red","certainty":"probable","roll":false}],"textLines":19,"preview":{"src":"img/A6TCAGQE5YRWXA3J-p.jpg","w":1600,"h":1067},"thumb":{"src":"img/A6TCAGQE5YRWXA3J-t.jpg","w":400,"h":267}},{"id":"8BQC0E034FQ48VFX","n":5,"attrs":[{"field":"track area","value":"drag racing track with checkered starting line and sponsor banners","certainty":"probable","roll":false},{"field":"color","value":"red","certainty":"probable","roll":false},{"field":"color","value":"red","certainty":"probable","roll":false}],"textLines":11,"preview":{"src":"img/8BQC0E034FQ48VFX-p.jpg","w":1600,"h":1067},"thumb":{"src":"img/8BQC0E034FQ48VFX-t.jpg","w":400,"h":267}},{"id":"DAS0TW3NXV22GS0T","n":6,"attrs":[{"field":"color","value":"blue","certainty":"probable","roll":false}],"textLines":18,"preview":{"src":"img/DAS0TW3NXV22GS0T-p.jpg","w":1600,"h":1067},"thumb":{"src":"img/DAS0TW3NXV22GS0T-t.jpg","w":400,"h":267}},{"id":"JHTF03Z4C28E11DT","n":7,"attrs":[{"field":"track area","value":"drag racing track with spectators and event banners visible","certainty":"probable","roll":false},{"field":"car number","value":"4023","certainty":"probable","roll":false},{"field":"car number","value":"4023?","certainty":"probable","roll":false},{"field":"color","value":"black","certainty":"probable","roll":false},{"field":"color","value":"white","certainty":"probable","roll":false}],"textLines":5,"preview":{"src":"img/JHTF03Z4C28E11DT-p.jpg","w":1600,"h":1067},"thumb":{"src":"img/JHTF03Z4C28E11DT-t.jpg","w":400,"h":267}},{"id":"CRQEHZGNQRJRCQN5","n":8,"attrs":[{"field":"car number","value":"7349?","certainty":"probable","roll":false},{"field":"category","value":"street","certainty":"probable","roll":false},{"field":"color","value":"black","certainty":"probable","roll":false}],"textLines":17,"preview":{"src":"img/CRQEHZGNQRJRCQN5-p.jpg","w":1600,"h":1067},"thumb":{"src":"img/CRQEHZGNQRJRCQN5-t.jpg","w":400,"h":267}},{"id":"765VBX3SQ71Y2DT6","n":9,"attrs":[{"field":"track area","value":"racing track with barriers and sponsor signs","certainty":"probable","roll":false},{"field":"activity","value":"racing","certainty":"probable","roll":false},{"field":"color","value":"red","certainty":"probable","roll":false},{"field":"make","value":"Pontiac","certainty":"probable","roll":false},{"field":"model","value":"Formula SE","certainty":"probable","roll":false}],"textLines":5,"preview":{"src":"img/765VBX3SQ71Y2DT6-p.jpg","w":1600,"h":1067},"thumb":{"src":"img/765VBX3SQ71Y2DT6-t.jpg","w":400,"h":267}},{"id":"R1S38B3MM5F51HH1","n":10,"attrs":[{"field":"track area","value":"drag racing track with cones and barriers","certainty":"probable","roll":false},{"field":"category","value":"street","certainty":"probable","roll":false},{"field":"color","value":"silver","certainty":"probable","roll":false},{"field":"color","value":"white","certainty":"probable","roll":false},{"field":"make","value":"Chevrolet","certainty":"probable","roll":false},{"field":"model","value":"Camaro Z28","certainty":"probable","roll":false},{"field":"year","value":"1993-2002","certainty":"probable","roll":false}],"textLines":4,"preview":{"src":"img/R1S38B3MM5F51HH1-p.jpg","w":1600,"h":1067},"thumb":{"src":"img/R1S38B3MM5F51HH1-t.jpg","w":400,"h":266}}],"facets":[{"field":"make","values":[{"value":"Chevrolet","n":2},{"value":"Pontiac","n":1}]},{"field":"model","values":[{"value":"Camaro","n":1},{"value":"Camaro Z28","n":1},{"value":"Formula SE","n":1}]},{"field":"color","values":[{"value":"red","n":5},{"value":"white","n":3},{"value":"black","n":2},{"value":"blue","n":1},{"value":"silver","n":1}]}],"queries":{"4023":{"hits":[{"id":"JHTF03Z4C28E11DT","coverage":"all","evidence":[{"field":"car number","value":"4023","certainty":"probable","rollContext":false,"matchedOn":"4023"}],"missing":[],"hasThumbnail":true}],"total":1},"6589":{"hits":[{"id":"A6TCAGQE5YRWXA3J","coverage":"all","evidence":[{"field":"car number","value":"6589?","certainty":"probable","rollContext":false,"matchedOn":"6589"}],"missing":[],"hasThumbnail":true}],"total":1},"7349":{"hits":[{"id":"CRQEHZGNQRJRCQN5","coverage":"all","evidence":[{"field":"car number","value":"7349?","certainty":"probable","rollContext":false,"matchedOn":"7349"}],"missing":[],"hasThumbnail":true}],"total":1},"9067":{"hits":[{"id":"YEASMGG4KF5RJGYP","coverage":"all","evidence":[{"field":"car number","value":"9067?","certainty":"probable","rollContext":false,"matchedOn":"9067"}],"missing":[],"hasThumbnail":true}],"total":1},"red":{"hits":[{"id":"YEASMGG4KF5RJGYP","coverage":"all","evidence":[{"field":"color","value":"red","certainty":"probable","rollContext":false,"matchedOn":"red"}],"missing":[],"hasThumbnail":true},{"id":"JHEGCZF5QF1NM31Q","coverage":"all","evidence":[{"field":"color","value":"red","certainty":"probable","rollContext":false,"matchedOn":"red"}],"missing":[],"hasThumbnail":true},{"id":"A6TCAGQE5YRWXA3J","coverage":"all","evidence":[{"field":"color","value":"red","certainty":"probable","rollContext":false,"matchedOn":"red"}],"missing":[],"hasThumbnail":true},{"id":"8BQC0E034FQ48VFX","coverage":"all","evidence":[{"field":"color","value":"red","certainty":"probable","rollContext":false,"matchedOn":"red"}],"missing":[],"hasThumbnail":true},{"id":"765VBX3SQ71Y2DT6","coverage":"all","evidence":[{"field":"color","value":"red","certainty":"probable","rollContext":false,"matchedOn":"red"}],"missing":[],"hasThumbnail":true}],"total":5},"street":{"hits":[{"id":"YEASMGG4KF5RJGYP","coverage":"all","evidence":[{"field":"category","value":"street","certainty":"probable","rollContext":false,"matchedOn":"street"}],"missing":[],"hasThumbnail":true},{"id":"JHEGCZF5QF1NM31Q","coverage":"all","evidence":[{"field":"category","value":"street","certainty":"probable","rollContext":false,"matchedOn":"street"}],"missing":[],"hasThumbnail":true},{"id":"QJQQ02TTZVT6E740","coverage":"all","evidence":[{"field":"category","value":"street","certainty":"probable","rollContext":false,"matchedOn":"street"}],"missing":[],"hasThumbnail":true},{"id":"A6TCAGQE5YRWXA3J","coverage":"all","evidence":[{"field":"category","value":"street","certainty":"probable","rollContext":false,"matchedOn":"street"}],"missing":[],"hasThumbnail":true},{"id":"CRQEHZGNQRJRCQN5","coverage":"all","evidence":[{"field":"category","value":"street","certainty":"probable","rollContext":false,"matchedOn":"street"}],"missing":[],"hasThumbnail":true},{"id":"R1S38B3MM5F51HH1","coverage":"all","evidence":[{"field":"category","value":"street","certainty":"probable","rollContext":false,"matchedOn":"street"}],"missing":[],"hasThumbnail":true}],"total":6},"white":{"hits":[{"id":"QJQQ02TTZVT6E740","coverage":"all","evidence":[{"field":"color","value":"white","certainty":"probable","rollContext":false,"matchedOn":"white"}],"missing":[],"hasThumbnail":true},{"id":"JHTF03Z4C28E11DT","coverage":"all","evidence":[{"field":"color","value":"white","certainty":"probable","rollContext":false,"matchedOn":"white"}],"missing":[],"hasThumbnail":true},{"id":"R1S38B3MM5F51HH1","coverage":"all","evidence":[{"field":"color","value":"white","certainty":"probable","rollContext":false,"matchedOn":"white"}],"missing":[],"hasThumbnail":true}],"total":3},"chevrolet":{"hits":[{"id":"QJQQ02TTZVT6E740","coverage":"all","evidence":[{"field":"make","value":"Chevrolet","certainty":"probable","rollContext":false,"matchedOn":"chevrolet"}],"missing":[],"hasThumbnail":true},{"id":"R1S38B3MM5F51HH1","coverage":"all","evidence":[{"field":"make","value":"Chevrolet","certainty":"probable","rollContext":false,"matchedOn":"chevrolet"}],"missing":[],"hasThumbnail":true}],"total":2},"black":{"hits":[{"id":"JHTF03Z4C28E11DT","coverage":"all","evidence":[{"field":"color","value":"black","certainty":"probable","rollContext":false,"matchedOn":"black"}],"missing":[],"hasThumbnail":true},{"id":"CRQEHZGNQRJRCQN5","coverage":"all","evidence":[{"field":"color","value":"black","certainty":"probable","rollContext":false,"matchedOn":"black"}],"missing":[],"hasThumbnail":true}],"total":2},"blue":{"hits":[{"id":"DAS0TW3NXV22GS0T","coverage":"all","evidence":[{"field":"color","value":"blue","certainty":"probable","rollContext":false,"matchedOn":"blue"}],"missing":[],"hasThumbnail":true}],"total":1},"camaro":{"hits":[{"id":"QJQQ02TTZVT6E740","coverage":"all","evidence":[{"field":"model","value":"Camaro","certainty":"probable","rollContext":false,"matchedOn":"camaro"},{"field":"make","value":"Chevrolet","certainty":"probable","rollContext":false,"matchedOn":"chevrolet"}],"missing":[],"hasThumbnail":true},{"id":"R1S38B3MM5F51HH1","coverage":"all","evidence":[{"field":"model","value":"Camaro Z28","certainty":"probable","rollContext":false,"matchedOn":"camaro"},{"field":"make","value":"Chevrolet","certainty":"probable","rollContext":false,"matchedOn":"chevrolet"}],"missing":[],"hasThumbnail":true}],"total":2},"camaro z28":{"hits":[{"id":"QJQQ02TTZVT6E740","coverage":"some","evidence":[{"field":"model","value":"Camaro","certainty":"probable","rollContext":false,"matchedOn":"camaro"},{"field":"make","value":"Chevrolet","certainty":"probable","rollContext":false,"matchedOn":"chevrolet"}],"missing":["z28"],"hasThumbnail":true},{"id":"R1S38B3MM5F51HH1","coverage":"some","evidence":[{"field":"model","value":"Camaro Z28","certainty":"probable","rollContext":false,"matchedOn":"camaro"},{"field":"make","value":"Chevrolet","certainty":"probable","rollContext":false,"matchedOn":"chevrolet"}],"missing":["z28"],"hasThumbnail":true}],"total":2},"chevrolet camaro":{"hits":[{"id":"QJQQ02TTZVT6E740","coverage":"all","evidence":[{"field":"model","value":"Camaro","certainty":"probable","rollContext":false,"matchedOn":"camaro"},{"field":"make","value":"Chevrolet","certainty":"probable","rollContext":false,"matchedOn":"chevrolet"}],"missing":[],"hasThumbnail":true},{"id":"R1S38B3MM5F51HH1","coverage":"all","evidence":[{"field":"model","value":"Camaro Z28","certainty":"probable","rollContext":false,"matchedOn":"camaro"},{"field":"make","value":"Chevrolet","certainty":"probable","rollContext":false,"matchedOn":"chevrolet"}],"missing":[],"hasThumbnail":true}],"total":2},"white camaro":{"hits":[{"id":"QJQQ02TTZVT6E740","coverage":"all","evidence":[{"field":"model","value":"Camaro","certainty":"probable","rollContext":false,"matchedOn":"camaro"},{"field":"make","value":"Chevrolet","certainty":"probable","rollContext":false,"matchedOn":"chevrolet"},{"field":"color","value":"white","certainty":"probable","rollContext":false,"matchedOn":"white"}],"missing":[],"hasThumbnail":true},{"id":"R1S38B3MM5F51HH1","coverage":"all","evidence":[{"field":"model","value":"Camaro Z28","certainty":"probable","rollContext":false,"matchedOn":"camaro"},{"field":"make","value":"Chevrolet","certainty":"probable","rollContext":false,"matchedOn":"chevrolet"},{"field":"color","value":"white","certainty":"probable","rollContext":false,"matchedOn":"white"}],"missing":[],"hasThumbnail":true},{"id":"JHTF03Z4C28E11DT","coverage":"some","evidence":[{"field":"color","value":"white","certainty":"probable","rollContext":false,"matchedOn":"white"}],"missing":["camaro","chevrolet"],"hasThumbnail":true}],"total":3},"pontiac":{"hits":[{"id":"765VBX3SQ71Y2DT6","coverage":"all","evidence":[{"field":"make","value":"Pontiac","certainty":"probable","rollContext":false,"matchedOn":"pontiac"}],"missing":[],"hasThumbnail":true}],"total":1},"corvette":{"hits":[{"id":"QJQQ02TTZVT6E740","coverage":"some","evidence":[{"field":"make","value":"Chevrolet","certainty":"probable","rollContext":false,"matchedOn":"chevrolet"}],"missing":["corvette"],"hasThumbnail":true},{"id":"R1S38B3MM5F51HH1","coverage":"some","evidence":[{"field":"make","value":"Chevrolet","certainty":"probable","rollContext":false,"matchedOn":"chevrolet"}],"missing":["corvette"],"hasThumbnail":true}],"total":2},"firebird":{"hits":[{"id":"765VBX3SQ71Y2DT6","coverage":"some","evidence":[{"field":"make","value":"Pontiac","certainty":"probable","rollContext":false,"matchedOn":"pontiac"}],"missing":["firebird"],"hasThumbnail":true}],"total":1},"raceway":{"hits":[{"id":"A6TCAGQE5YRWXA3J","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"raceway"}],"missing":[],"hasThumbnail":true},{"id":"8BQC0E034FQ48VFX","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"raceway"}],"missing":[],"hasThumbnail":true},{"id":"DAS0TW3NXV22GS0T","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"raceway"}],"missing":[],"hasThumbnail":true},{"id":"CRQEHZGNQRJRCQN5","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"raceway"}],"missing":[],"hasThumbnail":true}],"total":4},"car 4023":{"hits":[{"id":"JHTF03Z4C28E11DT","coverage":"all","evidence":[{"field":"car number","value":"4023","certainty":"probable","rollContext":false,"matchedOn":"4023"}],"missing":[],"hasThumbnail":true}],"total":1},"2000-2005":{"hits":[{"id":"QJQQ02TTZVT6E740","coverage":"some","evidence":[{"field":"year","value":"2000-2005","certainty":"probable","rollContext":false,"matchedOn":"2000"},{"field":"year","value":"2000-2005","certainty":"probable","rollContext":false,"matchedOn":"2005"}],"missing":["-"],"hasThumbnail":true},{"id":"R1S38B3MM5F51HH1","coverage":"some","evidence":[{"field":"year","value":"1993-2002","certainty":"probable","rollContext":false,"matchedOn":"2000"}],"missing":["2005","-"],"hasThumbnail":true}],"total":2},"drag racing":{"hits":[{"id":"8BQC0E034FQ48VFX","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"drag"}],"missing":[],"hasThumbnail":true},{"id":"DAS0TW3NXV22GS0T","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"drag"}],"missing":[],"hasThumbnail":true},{"id":"A6TCAGQE5YRWXA3J","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"drag"}],"missing":[],"hasThumbnail":true},{"id":"CRQEHZGNQRJRCQN5","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"drag"}],"missing":[],"hasThumbnail":true},{"id":"765VBX3SQ71Y2DT6","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"drag"}],"missing":[],"hasThumbnail":true}],"total":5},"drag":{"hits":[{"id":"8BQC0E034FQ48VFX","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"drag"}],"missing":[],"hasThumbnail":true},{"id":"DAS0TW3NXV22GS0T","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"drag"}],"missing":[],"hasThumbnail":true},{"id":"A6TCAGQE5YRWXA3J","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"drag"}],"missing":[],"hasThumbnail":true},{"id":"CRQEHZGNQRJRCQN5","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"drag"}],"missing":[],"hasThumbnail":true},{"id":"765VBX3SQ71Y2DT6","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"drag"}],"missing":[],"hasThumbnail":true}],"total":5},"drag racing track with checkered starting line and sponsor banners":{"hits":[{"id":"8BQC0E034FQ48VFX","coverage":"some","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"drag"}],"missing":["staging","track","checkered","sponsor","banners"],"hasThumbnail":true},{"id":"DAS0TW3NXV22GS0T","coverage":"some","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"drag"}],"missing":["staging","track","checkered","sponsor","banners"],"hasThumbnail":true},{"id":"A6TCAGQE5YRWXA3J","coverage":"some","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"drag"}],"missing":["staging","track","checkered","sponsor","banners"],"hasThumbnail":true},{"id":"CRQEHZGNQRJRCQN5","coverage":"some","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"drag"}],"missing":["staging","track","checkered","sponsor","banners"],"hasThumbnail":true},{"id":"765VBX3SQ71Y2DT6","coverage":"some","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"drag"}],"missing":["staging","track","checkered","sponsor","banners"],"hasThumbnail":true}],"total":5},"drag racing track with spectators and event banners visible":{"hits":[{"id":"8BQC0E034FQ48VFX","coverage":"some","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"drag"}],"missing":["track","spectators","event","banners","visible"],"hasThumbnail":true},{"id":"DAS0TW3NXV22GS0T","coverage":"some","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"drag"}],"missing":["track","spectators","event","banners","visible"],"hasThumbnail":true},{"id":"A6TCAGQE5YRWXA3J","coverage":"some","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"drag"}],"missing":["track","spectators","event","banners","visible"],"hasThumbnail":true},{"id":"CRQEHZGNQRJRCQN5","coverage":"some","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"drag"}],"missing":["track","spectators","event","banners","visible"],"hasThumbnail":true},{"id":"765VBX3SQ71Y2DT6","coverage":"some","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"drag"}],"missing":["track","spectators","event","banners","visible"],"hasThumbnail":true}],"total":5},"drag racing track with cones and barriers":{"hits":[{"id":"8BQC0E034FQ48VFX","coverage":"some","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"drag"}],"missing":["track","cones","barriers"],"hasThumbnail":true},{"id":"DAS0TW3NXV22GS0T","coverage":"some","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"drag"}],"missing":["track","cones","barriers"],"hasThumbnail":true},{"id":"A6TCAGQE5YRWXA3J","coverage":"some","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"drag"}],"missing":["track","cones","barriers"],"hasThumbnail":true},{"id":"CRQEHZGNQRJRCQN5","coverage":"some","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"drag"}],"missing":["track","cones","barriers"],"hasThumbnail":true},{"id":"765VBX3SQ71Y2DT6","coverage":"some","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"drag"}],"missing":["track","cones","barriers"],"hasThumbnail":true}],"total":5},"silver":{"hits":[{"id":"R1S38B3MM5F51HH1","coverage":"all","evidence":[{"field":"color","value":"silver","certainty":"probable","rollContext":false,"matchedOn":"silver"}],"missing":[],"hasThumbnail":true}],"total":1},"1993-2002":{"hits":[{"id":"R1S38B3MM5F51HH1","coverage":"some","evidence":[{"field":"year","value":"1993-2002","certainty":"probable","rollContext":false,"matchedOn":"1993"},{"field":"year","value":"1993-2002","certainty":"probable","rollContext":false,"matchedOn":"2002"}],"missing":["-"],"hasThumbnail":true},{"id":"QJQQ02TTZVT6E740","coverage":"some","evidence":[{"field":"year","value":"2000-2005","certainty":"probable","rollContext":false,"matchedOn":"2002"}],"missing":["1993","-"],"hasThumbnail":true}],"total":2},"park":{"hits":[{"id":"A6TCAGQE5YRWXA3J","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"park"}],"missing":[],"hasThumbnail":true},{"id":"8BQC0E034FQ48VFX","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"park"}],"missing":[],"hasThumbnail":true},{"id":"DAS0TW3NXV22GS0T","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"park"}],"missing":[],"hasThumbnail":true},{"id":"CRQEHZGNQRJRCQN5","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"park"}],"missing":[],"hasThumbnail":true}],"total":4},"federal":{"hits":[{"id":"A6TCAGQE5YRWXA3J","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"federal"}],"missing":[],"hasThumbnail":true},{"id":"DAS0TW3NXV22GS0T","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"federal"}],"missing":[],"hasThumbnail":true},{"id":"CRQEHZGNQRJRCQN5","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"federal"}],"missing":[],"hasThumbnail":true},{"id":"R1S38B3MM5F51HH1","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"federal"}],"missing":[],"hasThumbnail":true}],"total":4},"old":{"hits":[{"id":"A6TCAGQE5YRWXA3J","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"old"}],"missing":[],"hasThumbnail":true},{"id":"DAS0TW3NXV22GS0T","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"old"}],"missing":[],"hasThumbnail":true},{"id":"CRQEHZGNQRJRCQN5","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"old"}],"missing":[],"hasThumbnail":true}],"total":3},"bridge":{"hits":[{"id":"A6TCAGQE5YRWXA3J","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"bridge"}],"missing":[],"hasThumbnail":true},{"id":"DAS0TW3NXV22GS0T","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"bridge"}],"missing":[],"hasThumbnail":true},{"id":"CRQEHZGNQRJRCQN5","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"bridge"}],"missing":[],"hasThumbnail":true}],"total":3},"twp":{"hits":[{"id":"A6TCAGQE5YRWXA3J","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"twp"}],"missing":[],"hasThumbnail":true},{"id":"DAS0TW3NXV22GS0T","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"twp"}],"missing":[],"hasThumbnail":true},{"id":"CRQEHZGNQRJRCQN5","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"twp"}],"missing":[],"hasThumbnail":true}],"total":3},"winston":{"hits":[{"id":"8BQC0E034FQ48VFX","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"winston"}],"missing":[],"hasThumbnail":true},{"id":"A6TCAGQE5YRWXA3J","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"winston"}],"missing":[],"hasThumbnail":true},{"id":"DAS0TW3NXV22GS0T","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"winston"}],"missing":[],"hasThumbnail":true},{"id":"CRQEHZGNQRJRCQN5","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"winston"}],"missing":[],"hasThumbnail":true}],"total":4},"mogul":{"hits":[{"id":"A6TCAGQE5YRWXA3J","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"mogul"}],"missing":[],"hasThumbnail":true},{"id":"DAS0TW3NXV22GS0T","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"mogul"}],"missing":[],"hasThumbnail":true},{"id":"CRQEHZGNQRJRCQN5","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"mogul"}],"missing":[],"hasThumbnail":true},{"id":"R1S38B3MM5F51HH1","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"mogul"}],"missing":[],"hasThumbnail":true}],"total":4},"par":{"hits":[{"id":"A6TCAGQE5YRWXA3J","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"par"}],"missing":[],"hasThumbnail":true},{"id":"CRQEHZGNQRJRCQN5","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"par"}],"missing":[],"hasThumbnail":true}],"total":2},"englishtown":{"hits":[{"id":"A6TCAGQE5YRWXA3J","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"englishtown"}],"missing":[],"hasThumbnail":true},{"id":"DAS0TW3NXV22GS0T","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"englishtown"}],"missing":[],"hasThumbnail":true}],"total":2},"nhra":{"hits":[{"id":"A6TCAGQE5YRWXA3J","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"nhra"}],"missing":[],"hasThumbnail":true},{"id":"DAS0TW3NXV22GS0T","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"nhra"}],"missing":[],"hasThumbnail":true},{"id":"CRQEHZGNQRJRCQN5","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"nhra"}],"missing":[],"hasThumbnail":true}],"total":3},"series":{"hits":[{"id":"A6TCAGQE5YRWXA3J","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"series"}],"missing":[],"hasThumbnail":true},{"id":"DAS0TW3NXV22GS0T","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"series"}],"missing":[],"hasThumbnail":true},{"id":"CRQEHZGNQRJRCQN5","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"series"}],"missing":[],"hasThumbnail":true}],"total":3},"snap-on":{"hits":[{"id":"JHTF03Z4C28E11DT","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"snap-on"}],"missing":[],"hasThumbnail":true},{"id":"765VBX3SQ71Y2DT6","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"snap-on"}],"missing":[],"hasThumbnail":true},{"id":"R1S38B3MM5F51HH1","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"snap-on"}],"missing":[],"hasThumbnail":true}],"total":3},"906z":{"hits":[{"id":"YEASMGG4KF5RJGYP","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"906z"}],"missing":[],"hasThumbnail":true},{"id":"JHEGCZF5QF1NM31Q","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"906z"}],"missing":[],"hasThumbnail":true},{"id":"765VBX3SQ71Y2DT6","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"906z"}],"missing":[],"hasThumbnail":true}],"total":3},"budweiser":{"hits":[{"id":"8BQC0E034FQ48VFX","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"budweiser"}],"missing":[],"hasThumbnail":true}],"total":1},"nationals":{"hits":[{"id":"DAS0TW3NXV22GS0T","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"nationals"}],"missing":[],"hasThumbnail":true},{"id":"CRQEHZGNQRJRCQN5","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"nationals"}],"missing":[],"hasThumbnail":true}],"total":2},"budwe":{"hits":[{"id":"JHTF03Z4C28E11DT","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"budwe"}],"missing":[],"hasThumbnail":true}],"total":1},"sios":{"hits":[{"id":"YEASMGG4KF5RJGYP","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"sios"}],"missing":[],"hasThumbnail":true}],"total":1},"ut-9067":{"hits":[{"id":"YEASMGG4KF5RJGYP","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"ut-9067"}],"missing":[],"hasThumbnail":true}],"total":1},"81035b":{"hits":[{"id":"JHEGCZF5QF1NM31Q","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"81035b"}],"missing":[],"hasThumbnail":true}],"total":1},"englistitaun":{"hits":[{"id":"A6TCAGQE5YRWXA3J","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"englistitaun"}],"missing":[],"hasThumbnail":true}],"total":1},"nhrawin":{"hits":[{"id":"A6TCAGQE5YRWXA3J","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"nhrawin"}],"missing":[],"hasThumbnail":true}],"total":1},"drndracing":{"hits":[{"id":"A6TCAGQE5YRWXA3J","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"drndracing"}],"missing":[],"hasThumbnail":true}],"total":1},"rib":{"hits":[{"id":"A6TCAGQE5YRWXA3J","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"rib"}],"missing":[],"hasThumbnail":true}],"total":1},"lopar":{"hits":[{"id":"A6TCAGQE5YRWXA3J","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"lopar"}],"missing":[],"hasThumbnail":true}],"total":1},"arts":{"hits":[{"id":"A6TCAGQE5YRWXA3J","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"arts"}],"missing":[],"hasThumbnail":true}],"total":1},"hed":{"hits":[{"id":"A6TCAGQE5YRWXA3J","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"hed"}],"missing":[],"hasThumbnail":true}],"total":1},"englishzou":{"hits":[{"id":"A6TCAGQE5YRWXA3J","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"englishzou"}],"missing":[],"hasThumbnail":true}],"total":1},"ioguli":{"hits":[{"id":"A6TCAGQE5YRWXA3J","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"ioguli"}],"missing":[],"hasThumbnail":true}],"total":1},"charde":{"hits":[{"id":"8BQC0E034FQ48VFX","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"charde"}],"missing":[],"hasThumbnail":true}],"total":1},"mopor":{"hits":[{"id":"8BQC0E034FQ48VFX","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"mopor"}],"missing":[],"hasThumbnail":true}],"total":1},"richa":{"hits":[{"id":"8BQC0E034FQ48VFX","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"richa"}],"missing":[],"hasThumbnail":true}],"total":1},"ing":{"hits":[{"id":"8BQC0E034FQ48VFX","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"ing"}],"missing":[],"hasThumbnail":true}],"total":1},"rageiry":{"hits":[{"id":"8BQC0E034FQ48VFX","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"rageiry"}],"missing":[],"hasThumbnail":true}],"total":1},"ser":{"hits":[{"id":"DAS0TW3NXV22GS0T","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"ser"}],"missing":[],"hasThumbnail":true}],"total":1},"englisht":{"hits":[{"id":"DAS0TW3NXV22GS0T","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"englisht"}],"missing":[],"hasThumbnail":true}],"total":1},"nhrawinston":{"hits":[{"id":"DAS0TW3NXV22GS0T","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"nhrawinston"}],"missing":[],"hasThumbnail":true}],"total":1},"parts":{"hits":[{"id":"DAS0TW3NXV22GS0T","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"parts"}],"missing":[],"hasThumbnail":true}],"total":1},"iogu-g":{"hits":[{"id":"DAS0TW3NXV22GS0T","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"iogu-g"}],"missing":[],"hasThumbnail":true}],"total":1},"ugdele":{"hits":[{"id":"JHTF03Z4C28E11DT","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"ugdele"}],"missing":[],"hasThumbnail":true}],"total":1},"nhrawinnkom":{"hits":[{"id":"CRQEHZGNQRJRCQN5","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"nhrawinnkom"}],"missing":[],"hasThumbnail":true}],"total":1},"tena":{"hits":[{"id":"CRQEHZGNQRJRCQN5","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"tena"}],"missing":[],"hasThumbnail":true}],"total":1},"pary":{"hits":[{"id":"CRQEHZGNQRJRCQN5","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"pary"}],"missing":[],"hasThumbnail":true}],"total":1},"glisttown":{"hits":[{"id":"CRQEHZGNQRJRCQN5","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"glisttown"}],"missing":[],"hasThumbnail":true}],"total":1},"chrd":{"hits":[{"id":"CRQEHZGNQRJRCQN5","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"chrd"}],"missing":[],"hasThumbnail":true}],"total":1},"its":{"hits":[{"id":"CRQEHZGNQRJRCQN5","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"its"}],"missing":[],"hasThumbnail":true}],"total":1},"englislitour":{"hits":[{"id":"CRQEHZGNQRJRCQN5","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"englislitour"}],"missing":[],"hasThumbnail":true}],"total":1},"snapan":{"hits":[{"id":"765VBX3SQ71Y2DT6","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"snapan"}],"missing":[],"hasThumbnail":true}],"total":1},"deag":{"hits":[{"id":"765VBX3SQ71Y2DT6","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"deag"}],"missing":[],"hasThumbnail":true}],"total":1},"ut-906z":{"hits":[{"id":"YEASMGG4KF5RJGYP","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"ut-906z"}],"missing":[],"hasThumbnail":true},{"id":"JHEGCZF5QF1NM31Q","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"ut-906z"}],"missing":[],"hasThumbnail":true},{"id":"765VBX3SQ71Y2DT6","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"ut-906z"}],"missing":[],"hasThumbnail":true}],"total":3},"iser":{"hits":[{"id":"R1S38B3MM5F51HH1","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"iser"}],"missing":[],"hasThumbnail":true}],"total":1},"5nap2":{"hits":[{"id":"R1S38B3MM5F51HH1","coverage":"all","evidence":[{"field":"text in frame","value":null,"certainty":"probable","rollContext":false,"matchedOn":"5nap2"}],"missing":[],"hasThumbnail":true}],"total":1}}}</script>
+<script>
+/* Raceway Park — static demo app.
+ *
+ * Inlined into the exported index.html by export-static.ts. Plain ES2020, no
+ * build step, no dependencies.
+ *
+ * It renders a payload that was already filtered and allowlisted at build time:
+ * every frame in `PAYLOAD.frames` is one the crop-review gate passed, and every
+ * field on it came from the project's public DTOs. There is nothing here that
+ * decides what may be shown -- that decision was made before the file was
+ * written. This script only draws it.
+ *
+ * Search does not reimplement the engine. `PAYLOAD.queries` holds the real
+ * search()'s ranked answer for every term the archive can match; a multi-word
+ * query is composed from those per-term answers the same way the server
+ * composes one from per-term evidence. An unmatched word is reported as having
+ * no evidence rather than silently dropped.
+ */
+'use strict';
+
+var PAYLOAD = JSON.parse(document.getElementById('payload').textContent);
+var FRAMES = PAYLOAD.frames;
+var BY_ID = {};
+FRAMES.forEach(function (f) { BY_ID[f.id] = f; });
+
+var state = { q: '', filters: {}, id: null, zoom: false };
+
+/* ---------- helpers ---------------------------------------------------- */
+
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function norm(q) {
+  return String(q).toLowerCase().replace(/[^a-z0-9#\s-]/g, ' ').trim().replace(/\s+/g, ' ');
+}
+
+function pill(certainty) {
+  return certainty === 'known'
+    ? '<span class="pill known">operator-confirmed</span>'
+    : '<span class="pill inferred">machine suggestion</span>';
+}
+
+function el(id) { return document.getElementById(id); }
+
+/* ---------- search ----------------------------------------------------- */
+
+/**
+ * Resolve a query to ranked hits.
+ *
+ * An exact precomputed query returns the engine's own ordering untouched.
+ * Otherwise the query is split and composed from per-term answers: a frame's
+ * coverage is "all" only when every word found evidence on that frame, which is
+ * the rule the live results page uses.
+ */
+function runQuery(raw) {
+  var n = norm(raw);
+  if (!n) return null;
+  if (PAYLOAD.queries[n]) {
+    var pre = PAYLOAD.queries[n];
+    return { hits: pre.hits, total: pre.total, composed: false, deadTerms: [] };
+  }
+
+  var words = n.split(' ');
+  var perFrame = {};
+  var order = {};
+  var deadTerms = [];
+
+  words.forEach(function (w) {
+    var answer = PAYLOAD.queries[w];
+    if (!answer) { deadTerms.push(w); return; }
+    answer.hits.forEach(function (h, i) {
+      if (!perFrame[h.id]) perFrame[h.id] = { id: h.id, evidence: [], words: {}, hasThumbnail: h.hasThumbnail };
+      perFrame[h.id].words[w] = true;
+      h.evidence.forEach(function (e) { perFrame[h.id].evidence.push(e); });
+      if (order[h.id] === undefined || i < order[h.id]) order[h.id] = i;
+    });
+  });
+
+  var live = words.filter(function (w) { return PAYLOAD.queries[w]; });
+  var hits = Object.keys(perFrame).map(function (id) {
+    var f = perFrame[id];
+    var matched = Object.keys(f.words);
+    var missing = words.filter(function (w) { return !f.words[w]; });
+    // De-duplicate evidence: two words can be supported by one observation.
+    var seen = {};
+    var evidence = f.evidence.filter(function (e) {
+      var k = e.field + '|' + e.value + '|' + e.matchedOn;
+      if (seen[k]) return false;
+      seen[k] = true;
+      return true;
+    });
+    return {
+      id: id,
+      coverage: missing.length === 0 ? 'all' : 'some',
+      evidence: evidence,
+      missing: missing,
+      hasThumbnail: f.hasThumbnail,
+      _m: matched.length,
+      _o: order[id]
+    };
+  });
+
+  hits.sort(function (a, b) { return b._m - a._m || a._o - b._o; });
+  return { hits: hits, total: hits.length, composed: true, deadTerms: deadTerms, liveTerms: live };
+}
+
+/* ---------- filters ---------------------------------------------------- */
+
+function activeFilterCount() {
+  return Object.keys(state.filters).reduce(function (n, k) { return n + state.filters[k].length; }, 0);
+}
+
+/** AND across fields, OR within a field. */
+function passesFilters(frame) {
+  return Object.keys(state.filters).every(function (field) {
+    var want = state.filters[field];
+    if (!want.length) return true;
+    return frame.attrs.some(function (a) {
+      return !a.roll && a.field === field && want.indexOf(a.value) !== -1;
+    });
+  });
+}
+
+function toggleFilter(field, value) {
+  if (!state.filters[field]) state.filters[field] = [];
+  var at = state.filters[field].indexOf(value);
+  if (at === -1) state.filters[field].push(value);
+  else state.filters[field].splice(at, 1);
+  if (!state.filters[field].length) delete state.filters[field];
+  pushRoute();
+}
+
+function clearAll() {
+  state.filters = {};
+  state.q = '';
+  el('q').value = '';
+  pushRoute();
+}
+
+/* ---------- routing ---------------------------------------------------- */
+
+function pushRoute() {
+  var h;
+  if (state.id) h = '#/f/' + encodeURIComponent(state.id);
+  else {
+    var parts = [];
+    if (state.q) parts.push('q=' + encodeURIComponent(state.q));
+    Object.keys(state.filters).forEach(function (f) {
+      parts.push(encodeURIComponent(f) + '=' + encodeURIComponent(state.filters[f].join('|')));
+    });
+    h = parts.length ? '#/s?' + parts.join('&') : '#/';
+  }
+  if (location.hash !== h) location.hash = h;
+  else render();
+}
+
+function readRoute() {
+  var h = location.hash.replace(/^#/, '');
+  state.id = null;
+  var mf = /^\/f\/(.+)$/.exec(h);
+  if (mf) {
+    var id = decodeURIComponent(mf[1]);
+    if (BY_ID[id]) { state.id = id; return; }
+  }
+  state.q = '';
+  state.filters = {};
+  var ms = /^\/s\?(.*)$/.exec(h);
+  if (ms) {
+    ms[1].split('&').forEach(function (kv) {
+      var i = kv.indexOf('=');
+      if (i < 0) return;
+      var k = decodeURIComponent(kv.slice(0, i));
+      var v = decodeURIComponent(kv.slice(i + 1));
+      if (k === 'q') state.q = v;
+      else if (v) state.filters[k] = v.split('|');
+    });
+  }
+  el('q').value = state.q;
+}
+
+/* ---------- rendering: gallery + results ------------------------------ */
+
+function tile(frame, i) {
+  var img = frame.thumb || frame.preview;
+  var box = img
+    ? '<img src="' + esc(img.src) + '" width="' + img.w + '" height="' + img.h +
+      '" alt="Frame ' + esc(frame.id) + '" loading="lazy" decoding="async" class="x-loading" />'
+    : '<div class="thumb empty">no browser-ready asset</div>';
+  var make = frame.attrs.filter(function (a) { return !a.roll && (a.field === 'make' || a.field === 'model'); })
+    .map(function (a) { return a.value; });
+  var label = make.length ? make.slice(0, 2).join(' ') : 'unidentified';
+  return '<a class="cell" href="#/f/' + encodeURIComponent(frame.id) + '">' + box +
+    '<span class="cap"><span>' + esc(label) + '</span><span>' +
+    String(i + 1).padStart(2, '0') + '</span></span></a>';
+}
+
+function evidenceItem(e) {
+  var scope = e.rollContext ? ' <em>[roll context]</em>' : '';
+  var what = e.value === null ? '<b>' + esc(e.field) + '</b>' : '<b>' + esc(e.field) + ':</b> ' + esc(e.value);
+  return '<li>' + what + ' ' + pill(e.certainty) +
+    '<span class="meta">matched &ldquo;' + esc(e.matchedOn) + '&rdquo;' + scope + '</span></li>';
+}
+
+function hitRow(h) {
+  var frame = BY_ID[h.id];
+  if (!frame) return '';
+  var img = frame.thumb || frame.preview;
+  var thumb = img
+    ? '<img class="thumb" src="' + esc(img.src) + '" width="' + img.w + '" height="' + img.h +
+      '" alt="Frame ' + esc(h.id) + '" loading="lazy" decoding="async" />'
+    : '<div class="thumb empty">no asset</div>';
+  var cov = h.coverage === 'all'
+    ? '<span class="pill match-strong">matches every term</span>'
+    : '<span class="pill match-partial">partial match</span>';
+  var missing = h.missing && h.missing.length
+    ? '<p class="meta">no evidence for: ' + h.missing.map(esc).join(', ') + '</p>' : '';
+  return '<a class="hit" href="#/f/' + encodeURIComponent(h.id) + '">' + thumb +
+    '<div class="hit-body"><div class="hit-head">' + cov +
+    '<span class="pid">' + esc(h.id) + '</span></div>' +
+    '<ul class="evidence">' + h.evidence.map(evidenceItem).join('') + '</ul>' + missing +
+    '</div></a>';
+}
+
+function facetRail() {
+  var html = PAYLOAD.facets.map(function (f) {
+    var opts = f.values.map(function (v) {
+      var on = state.filters[f.field] && state.filters[f.field].indexOf(v.value) !== -1;
+      return '<button class="x-pill" type="button" aria-pressed="' + (on ? 'true' : 'false') +
+        '" data-field="' + esc(f.field) + '" data-value="' + esc(v.value) + '">' +
+        esc(v.value) + '<span class="x-count">' + v.n + '</span></button>';
+    }).join('');
+    return '<div class="x-facet"><span class="lbl">' + esc(f.field) + '</span><div class="opts">' + opts + '</div></div>';
+  }).join('');
+  var clear = (state.q || activeFilterCount())
+    ? '<div class="x-facet"><span class="lbl">&nbsp;</span><div class="opts">' +
+      '<button class="btn-ghost" type="button" id="clear" style="margin-top:0">clear all</button></div></div>'
+    : '';
+  return '<div class="x-controls">' + html + clear + '</div>';
+}
+
+function renderList() {
+  var answer = state.q ? runQuery(state.q) : null;
+  var body = '';
+
+  if (!state.q && !activeFilterCount()) {
+    var chips = PAYLOAD.chips.map(function (c) {
+      return '<a class="chip" href="#/s?q=' + encodeURIComponent(c) + '">' + esc(c) + '</a>';
+    }).join('');
+    body += '<section class="hero"><h1>Find <span class="hl">your</span> car.</h1>' +
+      '<p class="lede">Decades of Englishtown drag-racing negatives are being digitised. Type what you ' +
+      'remember &mdash; a car number, a colour, a make and model, a sign in the background &mdash; and the ' +
+      'archive looks for a frame that fits.</p>' +
+      '<p class="sub"><b>' + PAYLOAD.listable + '&nbsp;photographs</b> in this demo. Details were read ' +
+      'automatically by on-device text and image recognition, and are shown as ' +
+      '<span class="pill inferred">machine suggestion</span> until an operator confirms or corrects them ' +
+      '(<span class="pill known">operator-confirmed</span>).</p>' +
+      '<div class="chips"><span class="lbl">try:</span>' + chips + '</div></section>';
+  }
+
+  body += facetRail();
+
+  if (answer) {
+    var hits = answer.hits.filter(function (h) { return BY_ID[h.id] && passesFilters(BY_ID[h.id]); });
+    if (!hits.length) {
+      body += '<section class="emptyq"><h2>Nothing for &ldquo;' + esc(state.q) + '&rdquo;</h2>' +
+        '<p>No published frame has evidence for any part of that search' +
+        (activeFilterCount() ? ' within the filters you have set' : '') + '.</p>' +
+        '<p>Indexed so far includes: ' + PAYLOAD.chips.map(function (c) {
+          return '<a href="#/s?q=' + encodeURIComponent(c) + '"><code>' + esc(c) + '</code></a>';
+        }).join(', ') + '.</p>' +
+        '<p><a class="btn" href="#/">Browse all frames</a></p></section>';
+    } else {
+      var note = answer.composed
+        ? '<p class="meta">Composed from the engine’s answer for each word' +
+          (answer.deadTerms.length ? '; no term in the archive matches: ' + answer.deadTerms.map(esc).join(', ') : '') +
+          '.</p>'
+        : '';
+      body += '<section class="results"><h2>Results for &ldquo;' + esc(state.q) + '&rdquo;</h2>' +
+        '<p class="meta">' + hits.length + ' of ' + PAYLOAD.listable + ' published frames. ' +
+        'Order is &ldquo;how much of what you asked for the frame supports&rdquo;, not a probability it is your car.</p>' +
+        note + '<div class="hits">' + hits.map(hitRow).join('') + '</div></section>';
+    }
+  } else {
+    var shown = FRAMES.filter(passesFilters);
+    body += '<section class="browse">' +
+      '<div class="x-statusline"><span class="n"><b>' + shown.length + '</b> of ' + PAYLOAD.listable +
+      ' published frames</span>' +
+      (PAYLOAD.pendingReview ? '<span class="meta">' + PAYLOAD.pendingReview + ' withheld pending crop review</span>' : '') +
+      '</div>';
+    body += shown.length
+      ? '<div class="grid">' + shown.map(tile).join('') + '</div>'
+      : '<section class="emptyq"><h2>No frame matches those filters</h2>' +
+        '<p>Loosen one and the grid comes back.</p>' +
+        '<p><button class="btn" type="button" id="clear2">Clear filters</button></p></section>';
+    body += '</section>';
+  }
+
+  el('main').innerHTML = body;
+  wireList();
+}
+
+function wireList() {
+  Array.prototype.forEach.call(document.querySelectorAll('.x-pill'), function (b) {
+    b.addEventListener('click', function () { toggleFilter(b.dataset.field, b.dataset.value); });
+  });
+  ['clear', 'clear2'].forEach(function (id) {
+    var b = el(id);
+    if (b) b.addEventListener('click', clearAll);
+  });
+  // Fade a tile in only once its bytes are actually decoded, so the grid does
+  // not flash half-painted pictures on a slow phone connection.
+  Array.prototype.forEach.call(document.querySelectorAll('img.x-loading'), function (img) {
+    if (img.complete) img.classList.remove('x-loading');
+    else img.addEventListener('load', function () { img.classList.remove('x-loading'); }, { once: true });
+  });
+}
+
+/* ---------- rendering: detail ----------------------------------------- */
+
+function neighbours(id) {
+  var shown = FRAMES.filter(passesFilters);
+  var list = shown.length ? shown : FRAMES;
+  var i = list.findIndex(function (f) { return f.id === id; });
+  if (i === -1) { list = FRAMES; i = list.findIndex(function (f) { return f.id === id; }); }
+  return {
+    prev: i > 0 ? list[i - 1].id : null,
+    next: i >= 0 && i < list.length - 1 ? list[i + 1].id : null,
+    pos: i + 1,
+    of: list.length
+  };
+}
+
+function renderDetail() {
+  var f = BY_ID[state.id];
+  var nb = neighbours(state.id);
+  var rows = f.attrs.map(function (a) {
+    return '<tr><td>' + esc(a.field) + (a.roll ? ' <em>[roll]</em>' : '') + '</td><td>' +
+      esc(a.value) + '</td><td>' + pill(a.certainty) + '</td></tr>';
+  }).join('');
+  var obs = rows
+    ? '<table class="obs"><thead><tr><th>Field</th><th>Value</th><th>How it got here</th></tr></thead><tbody>' +
+      rows + '</tbody></table>'
+    : '<p class="muted">No details were recognised in this frame.</p>';
+  var text = f.textLines
+    ? '<p class="muted small">' + f.textLines + ' line(s) of text were read in this frame. They are ' +
+      'searchable, but not shown here: a transcription can pick up names and plates nobody asked to publish.</p>'
+    : '';
+  var img = f.preview || f.thumb;
+
+  el('main').innerHTML =
+    '<div class="x-detail-nav">' +
+    '<a class="btn-ghost" href="#/" style="margin-top:0">&larr; all frames</a>' +
+    (nb.prev ? '<a class="btn-ghost" href="#/f/' + encodeURIComponent(nb.prev) + '" style="margin-top:0">&larr; prev</a>' : '') +
+    (nb.next ? '<a class="btn-ghost" href="#/f/' + encodeURIComponent(nb.next) + '" style="margin-top:0">next &rarr;</a>' : '') +
+    '<span class="meta">' + nb.pos + ' of ' + nb.of + '</span></div>' +
+    '<section class="detail"><div class="viewer">' +
+    (img
+      ? '<button type="button" id="openzoom" style="all:unset;cursor:zoom-in;display:block" aria-label="Enlarge this frame">' +
+        '<img src="' + esc(img.src) + '" width="' + img.w + '" height="' + img.h +
+        '" alt="Watermarked preview of frame ' + esc(f.id) + '" decoding="async" /></button>' +
+        '<span class="zoomhint">click to enlarge</span>'
+      : '<div class="thumb empty">no browser-ready asset</div>') +
+    '</div><aside class="meta-panel"><h2>Frame <code>' + esc(f.id) + '</code></h2>' +
+    '<h3>Details</h3>' + obs + text +
+    '<p class="muted small">Preview is a watermarked, resolution-capped, metadata-stripped derivative. ' +
+    'The archival master is not part of this bundle and is not reachable from it.</p>' +
+    '</aside></section>';
+
+  var b = el('openzoom');
+  if (b) b.addEventListener('click', function () { openZoom(f); });
+}
+
+/* ---------- lightbox --------------------------------------------------- */
+
+var zoomState = { scale: 1, x: 0, y: 0, frame: null };
+
+function openZoom(f) {
+  var img = f.preview || f.thumb;
+  if (!img) return;
+  zoomState = { scale: 1, x: 0, y: 0, frame: f };
+  el('lbimg').src = img.src;
+  el('lbimg').alt = 'Enlarged watermarked preview of frame ' + f.id;
+  el('lbwho').textContent = f.id;
+  el('lb').classList.add('open');
+  el('lb').setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  applyZoom();
+  el('lbclose').focus();
+}
+
+function closeZoom() {
+  el('lb').classList.remove('open');
+  el('lb').setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+  var b = el('openzoom');
+  if (b) b.focus();
+}
+
+function applyZoom() {
+  var img = el('lbimg');
+  var stage = el('lbstage');
+  if (!zoomState.frame) return;
+  var src = zoomState.frame.preview || zoomState.frame.thumb;
+  var fit = Math.min(stage.clientWidth / src.w, stage.clientHeight / src.h);
+  var w = src.w * fit * zoomState.scale;
+  var h = src.h * fit * zoomState.scale;
+  img.style.width = w + 'px';
+  img.style.height = h + 'px';
+  img.style.transform = 'translate(' + (-w / 2 + zoomState.x) + 'px,' + (-h / 2 + zoomState.y) + 'px)';
+  el('lbpct').textContent = Math.round(zoomState.scale * 100) + '%';
+}
+
+function zoomBy(k) {
+  zoomState.scale = Math.max(1, Math.min(6, zoomState.scale * k));
+  if (zoomState.scale === 1) { zoomState.x = 0; zoomState.y = 0; }
+  applyZoom();
+}
+
+function wireZoom() {
+  el('lbclose').addEventListener('click', closeZoom);
+  el('lbin').addEventListener('click', function () { zoomBy(1.4); });
+  el('lbout').addEventListener('click', function () { zoomBy(1 / 1.4); });
+  el('lbfit').addEventListener('click', function () { zoomState.scale = 1; zoomState.x = 0; zoomState.y = 0; applyZoom(); });
+  el('lb').addEventListener('click', function (e) { if (e.target === el('lb') || e.target === el('lbstage')) closeZoom(); });
+  window.addEventListener('resize', function () { if (el('lb').classList.contains('open')) applyZoom(); });
+
+  var img = el('lbimg');
+  var drag = null;
+  img.addEventListener('pointerdown', function (e) {
+    if (zoomState.scale === 1) return;
+    drag = { x: e.clientX - zoomState.x, y: e.clientY - zoomState.y };
+    img.classList.add('grabbing');
+    img.setPointerCapture(e.pointerId);
+  });
+  img.addEventListener('pointermove', function (e) {
+    if (!drag) return;
+    zoomState.x = e.clientX - drag.x;
+    zoomState.y = e.clientY - drag.y;
+    applyZoom();
+  });
+  img.addEventListener('pointerup', function () { drag = null; img.classList.remove('grabbing'); });
+  img.addEventListener('dblclick', function () { zoomBy(zoomState.scale > 1 ? 1 / 6 : 2); });
+  el('lbstage').addEventListener('wheel', function (e) {
+    e.preventDefault();
+    zoomBy(e.deltaY < 0 ? 1.12 : 1 / 1.12);
+  }, { passive: false });
+}
+
+/* ---------- keyboard --------------------------------------------------- */
+
+function onKey(e) {
+  var open = el('lb').classList.contains('open');
+  var typing = /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName);
+
+  if (open) {
+    if (e.key === 'Escape') { closeZoom(); e.preventDefault(); }
+    else if (e.key === '+' || e.key === '=') { zoomBy(1.4); e.preventDefault(); }
+    else if (e.key === '-') { zoomBy(1 / 1.4); e.preventDefault(); }
+    else if (e.key === '0') { zoomState.scale = 1; zoomState.x = 0; zoomState.y = 0; applyZoom(); e.preventDefault(); }
+    return;
+  }
+
+  if (e.key === '/' && !typing) { el('q').focus(); el('q').select(); e.preventDefault(); return; }
+  if (typing) {
+    if (e.key === 'Escape') document.activeElement.blur();
+    return;
+  }
+  if (e.key === 'Escape' && state.id) { location.hash = '#/'; return; }
+
+  if (state.id) {
+    var nb = neighbours(state.id);
+    if (e.key === 'ArrowLeft' && nb.prev) { location.hash = '#/f/' + encodeURIComponent(nb.prev); e.preventDefault(); }
+    else if (e.key === 'ArrowRight' && nb.next) { location.hash = '#/f/' + encodeURIComponent(nb.next); e.preventDefault(); }
+    else if (e.key === 'Enter' || e.key === 'z') { var f = BY_ID[state.id]; if (f) { openZoom(f); e.preventDefault(); } }
+  }
+}
+
+/* ---------- boot ------------------------------------------------------- */
+
+function render() {
+  if (state.id) renderDetail();
+  else renderList();
+  document.title = (state.id ? 'Frame ' + state.id : state.q ? 'Results — ' + state.q : 'Find your car') +
+    ' — Raceway Park Archive';
+  if (el('lb').classList.contains('open') && !state.id) closeZoom();
+  window.scrollTo(0, 0);
+}
+
+function boot() {
+  el('searchform').addEventListener('submit', function (e) {
+    e.preventDefault();
+    state.q = el('q').value.trim().slice(0, 200);
+    state.id = null;
+    pushRoute();
+  });
+  window.addEventListener('hashchange', function () { readRoute(); render(); });
+  document.addEventListener('keydown', onKey);
+  wireZoom();
+  readRoute();
+  render();
+  document.body.classList.remove('x-booting');
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+else boot();
+
+</script>
+</body>
+</html>
